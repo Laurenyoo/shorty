@@ -1,0 +1,28 @@
+{
+  "name": "shorty",
+  "version": "1.0.0",
+  "description": "light weight shorten url project. the main focus here is for me to practice web servers and DBs. also to build a project end to end with production level documentation",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Laurenyoo/shorty.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Laurenyoo/shorty/issues"
+  },
+  "homepage": "https://github.com/Laurenyoo/shorty#readme",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.1",
+    "express": "^5.2.1",
+    "nanoid": "^5.1.7",
+    "pg": "^8.20.0"
+  }
+}
