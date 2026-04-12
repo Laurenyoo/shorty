@@ -110,7 +110,7 @@ router.get('/cache', async (req, res) => {
     res.json(values)
   } catch (err) {
     console.error(err)
-    res.status(500).json({ error: 'Something went wrong' })
+    res.status(500).json({ error: 'GET cache failed...' })
   }
 })
 
