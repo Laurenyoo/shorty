@@ -184,10 +184,10 @@ router.delete('/clear', async (req, res) => {
   try {
     await pool.query('DELETE FROM links')
     await redis.flushdb()
-    res.json({ message: 'Database cleared' })
+    res.json({ message: 'Postgres and Redis cleared' })
   } catch (err) {
     console.error(err)
-    res.status(500).json({ error: 'Something went wrong' })
+    res.status(500).json({ error: 'DELETE clear failed...' })
   }
 })
 
