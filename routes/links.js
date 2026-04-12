@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const pool = require('../db')
 const { nanoid } = require('nanoid')
+const redis = require('../redis')
 
 /*
     === creates the shorten url ===
@@ -80,18 +81,63 @@ router.delete('/links/:id', async (req, res) => {
 })
 
 /*
+  === gets cached linked from redis ===
+  when a get request for the cache is received this happens.
+  1. get all keys in the cache
+  2. checks if theres no keys, then its empty, return nothing
+  3. if its not empty then use the key to get the og link and return it
+*/ 
+router.get('/cache', async (req, res) => {
+  try {
+    const keys = (await redis.keys('*')).filter(key => !key.startsWith('visits:'))
+    
+    if (keys.length === 0) {
+      return res.json([])
+    }
+
+    const values = await Promise.all(
+      keys.map(async (key) => ({
+        short_code: key,
+        original_url: await redis.get(key),
+        ttl: await redis.ttl(key)
+      }))
+    )
+
+    res.json(values)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Something went wrong' })
+  }
+})
+
+/*
     === redirects to og url ===
     when a get request is revieved from the router, this happens.
-    1. runs a query to get the row that matches the short code
-    2. if result is empty... then it was never in the db lol
-    3. otherwise we have the link!
-    4. update the click count for that row
-    5. return a redirect with the og url
+    1. checks cache first
+    2. else runs a query to get the row that matches the short code
+    3. if result is empty... then it was never in the db lol
+    4. otherwise we have the link!
+    5. update the click count for that row
+    6. return a redirect with the og url
  */
 router.get('/:code', async (req, res) => {
   const { code } = req.params
 
   try {
+    // Check Redis cache first
+    const cached = await redis.get(code)
+
+    if (cached) {
+      console.log('cache hit')
+      await pool.query(
+        'UPDATE links SET click_count = click_count + 1 WHERE short_code = $1',
+        [code]
+      )
+      return res.redirect(cached)
+    }
+
+    // Not in cache, query Postgres
+    console.log('cache miss')
     const result = await pool.query(
       'SELECT * FROM links WHERE short_code = $1',
       [code]
@@ -103,6 +149,16 @@ router.get('/:code', async (req, res) => {
 
     const link = result.rows[0]
 
+    // Increment visit counter in Redis
+    const visitKey = `visits:${code}`
+    const visits = await redis.incr(visitKey)
+
+    // Only cache after 2 visits
+    if (visits >= 2) {
+      console.log('caching after 2 visits')
+      await redis.set(code, link.original_url, { ex: 86400 })
+    }
+
     await pool.query(
       'UPDATE links SET click_count = click_count + 1 WHERE id = $1',
       [link.id]
@@ -111,7 +167,22 @@ router.get('/:code', async (req, res) => {
     res.redirect(link.original_url)
   } catch (err) {
     console.error(err)
-    res.status(500).json({ error: 'GET redirect failed...' })
+    res.status(500).json({ error: 'Something went wrong' })
+  }
+})
+
+/*
+  === clear the postgres db ==
+  i want the db to empty every day at 12AM so that it doesn't messy
+  delete everything lol
+*/
+router.delete('/clear', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM links')
+    res.json({ message: 'Database cleared' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Something went wrong' })
   }
 })
 
