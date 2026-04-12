@@ -73,6 +73,10 @@ router.delete('/links/:id', async (req, res) => {
       return res.status(404).json({ error: 'Link not found' })
     }
 
+    const short_code = result.rows[0].short_code
+    await redis.del(short_code)
+    await redis.del(`visits:${short_code}`)
+
     res.json({ message: 'Link deleted', link: result.rows[0] })
   } catch (err) {
     console.error(err)
@@ -179,6 +183,7 @@ router.get('/:code', async (req, res) => {
 router.delete('/clear', async (req, res) => {
   try {
     await pool.query('DELETE FROM links')
+    await redis.flushdb()
     res.json({ message: 'Database cleared' })
   } catch (err) {
     console.error(err)
