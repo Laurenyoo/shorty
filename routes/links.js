@@ -176,7 +176,7 @@ router.get('/:code', async (req, res) => {
 })
 
 /*
-  === clear the postgres db ==
+  === clear the postgres and redis db ==
   i want the db to empty every day at 12AM so that it doesn't messy
   delete everything lol
 */
