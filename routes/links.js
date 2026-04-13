@@ -156,6 +156,9 @@ router.get('/:code', async (req, res) => {
     // Increment visit counter in Redis
     const visitKey = `visits:${code}`
     const visits = await redis.incr(visitKey)
+    if (visits === 1) {
+      await redis.expire(visitKey, 86400)
+    }
 
     // Only cache after 2 visits
     if (visits >= 2) {
