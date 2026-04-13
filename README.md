@@ -5,7 +5,7 @@ A lightweight URL shortener API built to practice web servers and databases end 
 ## Stack
 
 - **Runtime**: Node.js + Express 5
-- **Database**: PostgreSQL (via `pg`)
+- **Database**: Neon PostgreSQL
 - **Cache**: Upstash Redis
 - **Deploy**: Vercel
 
@@ -18,10 +18,10 @@ Short codes are generated with [nanoid](https://github.com/ai/nanoid). On redire
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `POST` | `/links` | Create a short link |
-| `GET` | `/links` | List all links |
-| `DELETE` | `/links/:id` | Delete a link by ID |
 | `GET` | `/:code` | Redirect to the original URL |
+| `GET` | `/links` | List all links |
 | `GET` | `/cache` | View all cached entries in Redis |
+| `DELETE` | `/links/:id` | Delete a link by ID |
 | `DELETE` | `/clear` | Clear all links and cache |
 
 ### POST /links
