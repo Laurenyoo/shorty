@@ -75,7 +75,6 @@ router.delete('/links/:id', async (req, res) => {
 
     const short_code = result.rows[0].short_code
     await redis.del(short_code)
-    await redis.del(`visits:${short_code}`)
 
     res.json({ message: 'Link deleted', link: result.rows[0] })
   } catch (err) {
@@ -93,7 +92,7 @@ router.delete('/links/:id', async (req, res) => {
 */ 
 router.get('/cache', async (req, res) => {
   try {
-    const keys = (await redis.keys('*')).filter(key => !key.startsWith('visits:'))
+    const keys = await redis.keys('*')
     
     if (keys.length === 0) {
       return res.json([])
@@ -153,15 +152,8 @@ router.get('/:code', async (req, res) => {
 
     const link = result.rows[0]
 
-    // Increment visit counter in Redis
-    const visitKey = `visits:${code}`
-    const visits = await redis.incr(visitKey)
-    if (visits === 1) {
-      await redis.expire(visitKey, 86400)
-    }
-
     // Only cache after 2 visits
-    if (visits >= 2) {
+    if (link.click_count >= 1) {
       console.log('caching after 2 visits')
       await redis.set(code, link.original_url, { ex: 86400 })
     }
