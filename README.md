@@ -48,7 +48,7 @@ UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_token
 
 ### Database
 
-Run this to create the links table:
+Run this in Neon to create the links table:
 
 ```sql
 CREATE TABLE links (
