@@ -174,7 +174,7 @@ router.get('/:code', async (req, res) => {
     res.redirect(link.original_url)
   } catch (err) {
     console.error(err)
-    res.status(500).json({ error: 'Something went wrong' })
+    res.status(500).json({ error: 'GET code aka redirect failed...' })
   }
 })
 
